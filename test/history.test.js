@@ -3,6 +3,7 @@ const path = require('path');
 const test = require('node:test');
 const { parseLog, assignLanes, timelineDomain, mergeNameStatus, parseNameStatus } = require('../lib/history');
 const { buildFileTree } = require('../public/file-tree');
+const { spreadCommitPositions } = require('../public/timeline');
 const { loadRepository } = require('../lib/repository');
 
 const FIXTURE = [
@@ -79,6 +80,25 @@ test('assignLanes keeps commits that are on main on main', () => {
   assert.deepEqual(lanes.map((lane) => lane.name), ['main', 'feature']);
   assert.deepEqual(lanes[0].tasks.map((task) => task.hash), ['initial', 'feature-work', 'merged']);
   assert.deepEqual(lanes[1].tasks.map((task) => task.hash), ['unmerged']);
+});
+
+test('spreadCommitPositions separates commits made hours apart', () => {
+  const start = Date.parse('2026-09-03T00:00:00Z');
+  const end = Date.parse('2026-10-07T00:00:00Z');
+  const times = [
+    Date.parse('2026-09-06T08:00:00Z'),
+    Date.parse('2026-10-04T20:00:00Z'),
+    Date.parse('2026-10-04T20:03:00Z'),
+    Date.parse('2026-10-04T22:42:00Z')
+  ];
+  const positions = spreadCommitPositions(times, start, end, 600, 56);
+  assert.equal(positions.length, 4);
+  assert.ok(positions[0] < 120, 'September commit stays near the start of the scale');
+  for (let index = 1; index < positions.length; index += 1) {
+    assert.ok(positions[index] - positions[index - 1] >= 55);
+  }
+  assert.ok(positions[1] - positions[0] > positions[3] - positions[1]);
+  assert.ok(positions[3] <= 600);
 });
 
 test('timelineDomain includes the commit and the present', () => {

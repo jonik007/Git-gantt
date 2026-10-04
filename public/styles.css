@@ -213,6 +213,25 @@ h1 {
   transform: translateY(-50%);
 }
 
+.task.compact {
+  width: 12px;
+  overflow: visible;
+  flex-direction: column-reverse;
+  align-items: center;
+  height: auto;
+}
+
+.task.compact .label {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  max-width: none;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
 .task.is-selected .mark { background: var(--bar-deep); }
 .task:focus-visible .mark { outline: 2px solid var(--ink); outline-offset: 2px; }
 
