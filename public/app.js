@@ -15,6 +15,14 @@ const detailCopy = document.querySelector('#detail-copy');
 const detailMeta = document.querySelector('#detail-meta');
 const filesHeading = document.querySelector('#files-heading');
 const detailFiles = document.querySelector('#detail-files');
+const treeTitle = document.querySelector('#tree-title');
+const fileTree = document.querySelector('#file-tree');
+
+const STATUS_LABEL = {
+  A: 'Добавлен',
+  U: 'Изменён',
+  D: 'Удалён'
+};
 
 function ru(count, one, few, many) {
   const mod10 = count % 10;
@@ -237,6 +245,7 @@ function selectTask(task, laneName) {
     detailMeta.append(term, description);
   }
   filesHeading.hidden = false;
+  renderFileTree(task);
   detailFiles.replaceChildren(...task.files.map((file) => {
     const item = document.createElement('li');
     const path = document.createElement('span');
@@ -252,6 +261,70 @@ function selectTask(task, laneName) {
     item.textContent = 'Нет изменённых файлов';
     detailFiles.append(item);
   }
+}
+
+function badge(status) {
+  const mark = document.createElement('span');
+  mark.className = `badge badge-${status.toLowerCase()}`;
+  mark.textContent = status;
+  mark.title = STATUS_LABEL[status] || status;
+  return mark;
+}
+
+function renderFileTree(task) {
+  treeTitle.textContent = task.subject || task.short;
+  fileTree.replaceChildren();
+  if (!task.files.length) {
+    const note = document.createElement('p');
+    note.className = 'tree-empty';
+    note.textContent = 'В этом коммите нет изменённых файлов.';
+    fileTree.append(note);
+    return;
+  }
+  fileTree.append(renderTreeLevel(GitGanttTree.buildFileTree(task.files)));
+}
+
+function renderTreeLevel(node) {
+  const list = document.createElement('ul');
+  list.className = 'tree-list';
+  for (const directory of node.directories) {
+    const item = document.createElement('li');
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'tree-row';
+    row.setAttribute('aria-expanded', 'true');
+    const twisty = document.createElement('span');
+    twisty.className = 'twisty';
+    twisty.setAttribute('aria-hidden', 'true');
+    const name = document.createElement('span');
+    name.className = 'tree-name';
+    name.textContent = directory.name;
+    row.append(twisty);
+    if (directory.status) row.append(badge(directory.status));
+    row.append(name);
+    const children = renderTreeLevel(directory);
+    row.addEventListener('click', () => {
+      const open = row.getAttribute('aria-expanded') === 'true';
+      row.setAttribute('aria-expanded', String(!open));
+      children.hidden = open;
+    });
+    item.append(row, children);
+    list.append(item);
+  }
+  for (const file of node.files) {
+    const item = document.createElement('li');
+    const row = document.createElement('div');
+    row.className = 'tree-row';
+    const twisty = document.createElement('span');
+    twisty.className = 'twisty';
+    const name = document.createElement('span');
+    name.className = 'tree-name';
+    name.textContent = file.name;
+    row.append(twisty, badge(file.status), name);
+    item.append(row);
+    list.append(item);
+  }
+  return list;
 }
 
 function showError(message) {
