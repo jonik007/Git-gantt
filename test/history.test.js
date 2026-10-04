@@ -64,18 +64,21 @@ test('buildFileTree nests directories and rolls up one status', () => {
   assert.deepEqual(tree.directories[0].files.map((file) => file.path), ['lib/history.js', 'lib/repository.js']);
 });
 
-test('assignLanes keeps shared history on the shorter branch', () => {
+test('assignLanes keeps commits that are on main on main', () => {
   const commits = [
-    { hash: 'a', authoredAt: '2026-09-06T11:00:37+03:00' },
-    { hash: 'b', authoredAt: '2026-10-04T19:00:00+03:00' }
+    { hash: 'initial', authoredAt: '2026-09-06T11:00:37+03:00' },
+    { hash: 'feature-work', authoredAt: '2026-10-04T19:00:00+03:00' },
+    { hash: 'merged', authoredAt: '2026-10-04T20:00:00+03:00' },
+    { hash: 'unmerged', authoredAt: '2026-10-04T21:00:00+03:00' }
   ];
   const lanes = assignLanes(commits, [
-    { name: 'main', commits: ['a'] },
-    { name: 'feature', commits: ['a', 'b'] }
+    { name: 'main', commits: ['initial', 'feature-work', 'merged'] },
+    { name: 'cursor/git-gantt-view-c562', commits: ['initial'] },
+    { name: 'feature', commits: ['initial', 'feature-work', 'merged', 'unmerged'] }
   ]);
   assert.deepEqual(lanes.map((lane) => lane.name), ['main', 'feature']);
-  assert.deepEqual(lanes[0].tasks.map((task) => task.hash), ['a']);
-  assert.deepEqual(lanes[1].tasks.map((task) => task.hash), ['b']);
+  assert.deepEqual(lanes[0].tasks.map((task) => task.hash), ['initial', 'feature-work', 'merged']);
+  assert.deepEqual(lanes[1].tasks.map((task) => task.hash), ['unmerged']);
 });
 
 test('timelineDomain includes the commit and the present', () => {
@@ -97,6 +100,7 @@ test('loadRepository reads this checkout', () => {
   const updatedReadme = tasks.find((task) => task.files.some((file) => file.path === 'README.md' && file.status === 'U'));
   assert.ok(updatedReadme, 'a later README edit should be marked updated');
   assert.ok(initial.coauthors.some((name) => name.includes('jonik007')));
-  assert.ok(data.lanes.some((lane) => lane.name === 'main'));
+  const mainLane = data.lanes.find((lane) => lane.name === 'main');
+  assert.ok(mainLane.tasks.some((task) => task.hash === initial.hash));
   assert.ok(Date.parse(data.domain.start) < Date.parse(initial.authoredAt));
 });
