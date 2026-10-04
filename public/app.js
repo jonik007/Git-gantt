@@ -160,16 +160,16 @@ function renderChart() {
       track.append(line);
     }
 
-    const placed = placeTasks(lane.tasks, xFor, width);
-    track.style.height = `${Math.max(placed.rows, 1) * 48 + 20}px`;
+    const placed = placeTasks(lane.tasks, start, end, width);
+    track.style.height = '92px';
     for (const item of placed.items) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `task${item.side === 'left' ? ' label-left' : ''}`;
+      button.className = `task${item.compact ? ' compact' : ''}`;
       button.dataset.hash = item.task.hash;
       button.style.left = `${item.left}px`;
-      button.style.top = `${item.row * 48 + 14}px`;
-      button.title = item.task.subject || item.task.short;
+      button.style.top = '34px';
+      button.title = `${item.task.subject || item.task.short} — ${formatStamp(item.task.authoredAt)}`;
       if (state.selected === item.task.hash) button.classList.add('is-selected');
       const mark = document.createElement('span');
       mark.className = 'mark';
@@ -177,7 +177,7 @@ function renderChart() {
       const label = document.createElement('span');
       label.className = 'label';
       label.style.maxWidth = `${item.labelWidth}px`;
-      label.textContent = item.task.subject || item.task.short;
+      label.textContent = item.compact ? formatClock(item.task.authoredAt) : (item.task.subject || item.task.short);
       button.append(mark, label);
       button.addEventListener('click', () => selectTask(item.task, lane.name));
       track.append(button);
@@ -188,30 +188,37 @@ function renderChart() {
   }
 }
 
-function placeTasks(tasks, xFor, width) {
-  const rowEnds = [];
-  const items = tasks.map((task) => {
-    const authored = Date.parse(task.authoredAt);
-    const committed = Math.max(Date.parse(task.committedAt) || authored, authored);
-    const left = Math.max(0, Math.min(xFor(authored), Math.max(0, width - 12)));
-    const bar = Math.min(Math.max(xFor(committed) - left, 12), Math.max(12, width - left));
-    const preferred = Math.min(420, ((task.subject || task.short).length * 7.4) + 8);
-    const roomRight = Math.max(0, width - (left + bar) - 12);
-    const roomLeft = Math.max(0, left - 12);
-    const side = roomRight >= preferred || roomRight >= roomLeft ? 'right' : 'left';
-    const labelWidth = Math.max(48, Math.min(preferred, side === 'right' ? roomRight : roomLeft));
-    const start = side === 'left' ? left - labelWidth : left;
-    const end = side === 'right' ? left + bar + labelWidth : left + bar;
-    let row = rowEnds.findIndex((edge) => start >= edge + 8);
-    if (row < 0) {
-      row = rowEnds.length;
-      rowEnds.push(end);
-    } else {
-      rowEnds[row] = Math.max(rowEnds[row], end);
-    }
-    return { task, row, left, width: bar, side, labelWidth };
+function formatClock(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function placeTasks(tasks, start, end, width) {
+  const ordered = tasks.slice().sort((a, b) => Date.parse(a.authoredAt) - Date.parse(b.authoredAt));
+  const positions = GitGanttTimeline.spreadCommitPositions(
+    ordered.map((task) => Date.parse(task.authoredAt)),
+    start,
+    end,
+    width,
+    56
+  );
+  const items = ordered.map((task, index) => {
+    const left = positions[index];
+    const next = positions[index + 1] ?? width;
+    const room = next - left;
+    const compact = room < 140;
+    return {
+      task,
+      row: 0,
+      left,
+      width: 12,
+      compact,
+      side: compact ? 'compact' : 'right',
+      labelWidth: compact ? 52 : Math.max(48, Math.min(420, room - 24))
+    };
   });
-  return { items, rows: Math.max(rowEnds.length, 1) };
+  return { items, rows: 1 };
 }
 
 function diffText(file) {
