@@ -37,6 +37,24 @@
     </aside>
   </div>
 
-  <script src="/app.js"></script>
+  <section id="tree-panel" class="tree-panel" aria-label="Дерево файлов коммита">
+    <div class="tree-head">
+      <div>
+        <p class="eyebrow">Файлы коммита</p>
+        <h2 id="tree-title">Выберите коммит</h2>
+      </div>
+      <ul class="legend">
+        <li><span class="badge badge-a">A</span> добавлен</li>
+        <li><span class="badge badge-u">U</span> изменён</li>
+        <li><span class="badge badge-d">D</span> удалён</li>
+      </ul>
+    </div>
+    <div id="file-tree" class="file-tree">
+      <p class="tree-empty">Выберите полосу на шкале, чтобы увидеть папки и файлы этого коммита.</p>
+    </div>
+  </section>
+
+    <script src="/file-tree.js"></script>
+    <script src="/app.js"></script>
 </body>
 </html>

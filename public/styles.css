@@ -24,7 +24,7 @@ body {
     var(--paper);
 }
 
-.top, .layout {
+.top, .layout, .tree-panel {
   width: min(1180px, calc(100% - 32px));
   margin-inline: auto;
 }
@@ -89,7 +89,7 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 18px;
-  padding-bottom: 40px;
+  padding-bottom: 18px;
 }
 
 .board, .detail {
@@ -271,10 +271,117 @@ h1 {
 .add { color: var(--today); }
 .del { color: var(--bar); }
 
+.tree-panel {
+  margin-bottom: 40px;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+.tree-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.tree-panel h2 {
+  margin: 0;
+  font-family: Georgia, "Liberation Serif", serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-tree { margin-top: 8px; }
+
+.tree-empty {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.tree-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree-list .tree-list {
+  margin-left: 14px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.tree-row { cursor: pointer; }
+
+.twisty {
+  width: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tree-row[aria-expanded="true"] .twisty::before { content: "▾"; }
+.tree-row[aria-expanded="false"] .twisty::before { content: "▸"; }
+
+.tree-name {
+  font-family: "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-family: "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badge-a { background: var(--today); color: #f4fff8; }
+.badge-u { background: #a56b22; color: #fff8ea; }
+.badge-d { background: var(--bar); color: #fff6f2; }
+
 @media (max-width: 860px) {
   h1 { font-size: 40px; }
   .top, .layout { display: block; }
   .stats { margin-top: 18px; }
   .detail { margin-top: 18px; }
+  .tree-head { display: block; }
+  .legend { margin-top: 12px; }
   :root { --gutter: 132px; }
 }
