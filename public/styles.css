@@ -200,7 +200,17 @@ h1 {
 
 .task .label {
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.task.label-left .label {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  max-width: 420px;
+  transform: translateY(-50%);
 }
 
 .task.is-selected .mark { background: var(--bar-deep); }

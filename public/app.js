@@ -105,19 +105,21 @@ function renderChart() {
 
   const xFor = (time) => ((time - start) / span) * width;
   const ticks = chooseTicks(start, end);
+  const today = Date.now();
+  const todayX = xFor(today);
+  const showToday = today >= start && today <= end;
   for (const tick of ticks) {
+    if (showToday && Math.abs(xFor(tick) - todayX) < 72) continue;
     const mark = document.createElement('span');
     mark.className = 'tick';
     mark.style.left = `${xFor(tick)}px`;
     mark.textContent = formatAxis(tick);
     scale.append(mark);
   }
-
-  const today = Date.now();
-  if (today >= start && today <= end) {
+  if (showToday) {
     const label = document.createElement('span');
     label.className = 'today-label';
-    label.style.left = `${xFor(today)}px`;
+    label.style.left = `${todayX}px`;
     label.textContent = 'Сегодня';
     scale.append(label);
   }
@@ -155,16 +157,18 @@ function renderChart() {
     for (const item of placed.items) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'task';
+      button.className = `task${item.side === 'left' ? ' label-left' : ''}`;
       button.dataset.hash = item.task.hash;
       button.style.left = `${item.left}px`;
       button.style.top = `${item.row * 48 + 14}px`;
+      button.title = item.task.subject || item.task.short;
       if (state.selected === item.task.hash) button.classList.add('is-selected');
       const mark = document.createElement('span');
       mark.className = 'mark';
       mark.style.width = `${item.width}px`;
       const label = document.createElement('span');
       label.className = 'label';
+      label.style.maxWidth = `${item.labelWidth}px`;
       label.textContent = item.task.subject || item.task.short;
       button.append(mark, label);
       button.addEventListener('click', () => selectTask(item.task, lane.name));
@@ -180,27 +184,26 @@ function placeTasks(tasks, xFor, width) {
   const rowEnds = [];
   const items = tasks.map((task) => {
     const authored = Date.parse(task.authoredAt);
-    const committed = Date.parse(task.committedAt);
-    const left = Math.max(0, xFor(authored));
-    const rawRight = xFor(Math.max(committed, authored));
-    const bar = Math.max(rawRight - left, 12);
-    const label = Math.min(280, ((task.subject || task.short).length * 8) + 16);
-    const occupiedUntil = left + bar + label;
-    let row = rowEnds.findIndex((end) => left >= end + 6);
+    const committed = Math.max(Date.parse(task.committedAt) || authored, authored);
+    const left = Math.max(0, Math.min(xFor(authored), Math.max(0, width - 12)));
+    const bar = Math.min(Math.max(xFor(committed) - left, 12), Math.max(12, width - left));
+    const preferred = Math.min(420, ((task.subject || task.short).length * 7.4) + 8);
+    const roomRight = Math.max(0, width - (left + bar) - 12);
+    const roomLeft = Math.max(0, left - 12);
+    const side = roomRight >= preferred || roomRight >= roomLeft ? 'right' : 'left';
+    const labelWidth = Math.max(48, Math.min(preferred, side === 'right' ? roomRight : roomLeft));
+    const start = side === 'left' ? left - labelWidth : left;
+    const end = side === 'right' ? left + bar + labelWidth : left + bar;
+    let row = rowEnds.findIndex((edge) => start >= edge + 8);
     if (row < 0) {
       row = rowEnds.length;
-      rowEnds.push(occupiedUntil);
+      rowEnds.push(end);
     } else {
-      rowEnds[row] = occupiedUntil;
+      rowEnds[row] = Math.max(rowEnds[row], end);
     }
-    return {
-      task,
-      row,
-      left: Math.min(left, Math.max(0, width - bar)),
-      width: bar
-    };
+    return { task, row, left, width: bar, side, labelWidth };
   });
-  return { items, rows: rowEnds.length };
+  return { items, rows: Math.max(rowEnds.length, 1) };
 }
 
 function diffText(file) {
