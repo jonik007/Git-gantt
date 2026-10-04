@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Gantt</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="eyebrow">Репозиторий</p>
+      <h1>Git Gantt</h1>
+      <p id="repo-line" class="lede">Читаю git-историю…</p>
+    </div>
+    <div id="stats" class="stats" hidden></div>
+  </header>
+
+  <div class="layout">
+    <section class="board" aria-label="Диаграмма Ганта">
+      <div class="scale-row">
+        <div class="gutter"></div>
+        <div id="scale" class="scale"></div>
+      </div>
+      <div id="lanes" class="lanes">
+        <p id="status" class="status">Собираю коммиты…</p>
+      </div>
+    </section>
+
+    <aside id="detail" class="detail" aria-live="polite">
+      <p class="eyebrow">Коммит</p>
+      <h2 id="detail-title">Выберите полосу</h2>
+      <p id="detail-copy">На шкале каждая полоса — коммит. Общая история остаётся на более короткой ветке.</p>
+      <dl id="detail-meta" class="meta" hidden></dl>
+      <h3 id="files-heading" hidden>Файлы</h3>
+      <ul id="detail-files" class="files"></ul>
+    </aside>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
